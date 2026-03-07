@@ -609,10 +609,16 @@ class DatasetProvider(abc.ABC):
         # NOTE: This place is compatible with windows, windows multi-process is spawn
         C.register_from_C(g_config)
 
+        # Suppress numpy RuntimeWarnings in worker processes
+        # (e.g. log(0) in LLM-generated factor expressions — handled by downstream processors)
+        import warnings
+        warnings.filterwarnings("ignore", category=RuntimeWarning)
+
         obj = dict()
-        for field in column_names:
-            #  The client does not have expression provider, the data will be loaded from cache using static method.
-            obj[field] = ExpressionD.expression(inst, field, start_time, end_time, freq)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            for field in column_names:
+                #  The client does not have expression provider, the data will be loaded from cache using static method.
+                obj[field] = ExpressionD.expression(inst, field, start_time, end_time, freq)
 
         data = pd.DataFrame(obj)
         if not data.empty and not np.issubdtype(data.index.dtype, np.dtype("M")):

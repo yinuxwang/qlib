@@ -212,6 +212,8 @@ class FileInstrumentStorage(FileStorageMixin, InstrumentStorage):
             names=[self.SYMBOL_FIELD_NAME, self.INSTRUMENT_START_FIELD, self.INSTRUMENT_END_FIELD],
             dtype={self.SYMBOL_FIELD_NAME: str},
             parse_dates=[self.INSTRUMENT_START_FIELD, self.INSTRUMENT_END_FIELD],
+            keep_default_na=False,  # Prevent 'nan' ticker → float NaN
+            na_values=[],           # Don't interpret any string as NA
         )
         for row in df.itertuples(index=False):
             _instruments.setdefault(row[0], []).append((row[1], row[2]))
