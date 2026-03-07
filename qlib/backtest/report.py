@@ -583,7 +583,8 @@ class Indicator:
 
     def _cal_trade_positive_rate(self) -> Optional[BaseSingleMetric]:
         def func(pa):
-            return (pa > 0).sum() / pa.count()
+            n = pa.count()
+            return (pa > 0).sum() / n if n > 0 else 0.0
 
         return self.order_indicator.transfer(func)
 

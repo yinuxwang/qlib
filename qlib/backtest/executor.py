@@ -118,7 +118,7 @@ class BaseExecutor:
         self._settle_type = settle_type
         self.reset(start_time=start_time, end_time=end_time, common_infra=common_infra)
         if common_infra is None:
-            get_module_logger("BaseExecutor").warning(f"`common_infra` is not set for {self}")
+            get_module_logger("BaseExecutor").debug(f"`common_infra` is not set for {self}")
 
         # record deal order amount in one day
         self.dealt_order_amount: Dict[str, float] = defaultdict(float)
