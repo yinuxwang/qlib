@@ -288,6 +288,11 @@ class FileFeatureStorage(FileStorageMixin, FeatureStorage):
     def __init__(self, instrument: str, field: str, freq: str, provider_uri: dict = None, **kwargs):
         super(FileFeatureStorage, self).__init__(instrument, field, freq, **kwargs)
         self._provider_uri = None if provider_uri is None else C.DataPathManager.format_provider_uri(provider_uri)
+        # Guard: some instruments can be float NaN (e.g. ticker "NAN" parsed by pandas)
+        if not isinstance(instrument, str):
+            import warnings
+            warnings.warn(f"FileFeatureStorage received non-string instrument: {instrument!r}, converting to str")
+            instrument = str(instrument) if not (isinstance(instrument, float) and instrument != instrument) else "_nan_"
         self.file_name = f"{instrument.lower()}/{field.lower()}.{freq.lower()}.bin"
 
     def clear(self):
