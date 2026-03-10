@@ -175,8 +175,29 @@ def calc_ic(pred: pd.Series, label: pd.Series, date_col="datetime", dropna=False
         ic and rank ic
     """
     df = pd.DataFrame({"pred": pred, "label": label})
-    ic = df.groupby(date_col, group_keys=False).apply(lambda df: df["pred"].corr(df["label"]))
-    ric = df.groupby(date_col, group_keys=False).apply(lambda df: df["pred"].corr(df["label"], method="spearman"))
+    
+    # Safe loop to avoid pandas cross-version / cross-platform groupby.apply correlation bugs
+    dates = df.index.get_level_values(date_col).unique()
+    ic_list = []
+    ric_list = []
+    
+    for dt in dates:
+        try:
+            day_df = df.xs(dt, level=date_col)
+            # require at least 2 points to calulate correlation
+            if len(day_df) > 1:
+                ic_list.append(day_df["pred"].corr(day_df["label"]))
+                ric_list.append(day_df["pred"].corr(day_df["label"], method="spearman"))
+            else:
+                ic_list.append(np.nan)
+                ric_list.append(np.nan)
+        except Exception:
+            ic_list.append(np.nan)
+            ric_list.append(np.nan)
+            
+    ic = pd.Series(ic_list, index=dates)
+    ric = pd.Series(ric_list, index=dates)
+
     if dropna:
         return ic.dropna(), ric.dropna()
     else:
